@@ -856,6 +856,21 @@ def render_home():
     if df is not None:
         st.success(f"✅ Fichier actif : **{report_date_str}** – {periodicity.upper()} – {len(df)} fonds")
 
+        # ── Diagnostic : colonnes lues depuis le fichier ASFIM ────────────────
+        with st.expander("🔍 Diagnostic colonnes (cliquer pour vérifier)", expanded=False):
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.markdown("**Valeurs uniques – Souscripteurs :**")
+                vals_souscr = df["souscripteurs"].dropna().unique().tolist()
+                st.write(vals_souscr if vals_souscr else "⚠️ Colonne vide / non détectée")
+            with col_b:
+                st.markdown("**Valeurs uniques – Classification :**")
+                vals_class = df["classification"].dropna().unique().tolist()
+                st.write(vals_class if vals_class else "⚠️ Colonne vide / non détectée")
+            st.markdown(f"**Total fonds dans le fichier :** {len(df)}")
+            n_fgp = df["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False).sum()
+            st.markdown(f"**Fonds avec souscripteurs = FGP :** {n_fgp}")
+
         st.markdown("### Résumé rapide")
         cols = st.columns(3)
         for i, cat in enumerate(["OCT", "OMLT", "DIVERSIFIE"]):
