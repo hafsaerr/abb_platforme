@@ -9,25 +9,22 @@ def get_market_df(df_full: pd.DataFrame, category: str) -> pd.DataFrame:
     """
     Return all funds from df_full belonging to `category` (OCT / OMLT / DIVERSIFIE)
     AND souscripteurs = FGP.
-    Classification matched by exact value first, then keyword fallback.
+    Uses exact match on classification value (OCT, OMLT, DIVERSIFIÉ).
     """
-    # Exact match on category name (e.g. "OCT", "OMLT", "DIVERSIFIÉ", "DIVERSIFIE")
     exact_values = {
         "OCT":       ["OCT"],
         "OMLT":      ["OMLT"],
-        "DIVERSIFIE":["DIVERSIFIÉ", "DIVERSIFIE", "DIVERSIFIE\u0301"],
+        "DIVERSIFIE": ["DIVERSIFIÉ", "DIVERSIFIE"],
     }
     cls_upper = df_full["classification"].str.strip().str.upper()
-    targets = [v.upper() for v in exact_values.get(category, [])]
-    mask_exact = cls_upper.isin(targets)
+    # Normalise accents: É → E for comparison
+    import unicodedata
+    def norm(s):
+        return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode()
 
-    # Keyword fallback for funds with longer classification strings
-    kws = [k.lower() for k in CLASSIFICATION_KEYWORDS.get(category, [])]
-    mask_kw = df_full["classification"].str.lower().apply(
-        lambda v: any(kw in v for kw in kws)
-    )
-
-    mask_cat = mask_exact | mask_kw
+    cls_norm = cls_upper.apply(norm)
+    targets_norm = [norm(v.upper()) for v in exact_values.get(category, [])]
+    mask_cat = cls_norm.isin(targets_norm)
     mask_fgp = df_full["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False)
     return df_full[mask_cat & mask_fgp].copy()
 
