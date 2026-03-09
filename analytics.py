@@ -7,20 +7,37 @@ from config import CATEGORY_CODES, CLASSIFICATION_KEYWORDS
 
 def get_market_df(df_full: pd.DataFrame, category: str) -> pd.DataFrame:
     """
-    Return all funds from df_full belonging to `category` (OCT / OMLT / DIVERSIFIE).
-    Detection is by classification column keyword matching.
+    Return all funds from df_full belonging to `category` (OCT / OMLT / DIVERSIFIE)
+    AND souscripteurs = FGP.
+    Classification matched by exact value first, then keyword fallback.
     """
+    # Exact match on category name (e.g. "OCT", "OMLT", "DIVERSIFIÉ", "DIVERSIFIE")
+    exact_values = {
+        "OCT":       ["OCT"],
+        "OMLT":      ["OMLT"],
+        "DIVERSIFIE":["DIVERSIFIÉ", "DIVERSIFIE", "DIVERSIFIE\u0301"],
+    }
+    cls_upper = df_full["classification"].str.strip().str.upper()
+    targets = [v.upper() for v in exact_values.get(category, [])]
+    mask_exact = cls_upper.isin(targets)
+
+    # Keyword fallback for funds with longer classification strings
     kws = [k.lower() for k in CLASSIFICATION_KEYWORDS.get(category, [])]
-    mask = df_full["classification"].str.lower().apply(
+    mask_kw = df_full["classification"].str.lower().apply(
         lambda v: any(kw in v for kw in kws)
     )
-    return df_full[mask].copy()
+
+    mask_cat = mask_exact | mask_kw
+    mask_fgp = df_full["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False)
+    return df_full[mask_cat & mask_fgp].copy()
 
 
 def get_abb_df(df_full: pd.DataFrame, category: str, periodicity: str) -> pd.DataFrame:
-    """Return ABB funds for the given category + periodicity."""
+    """Return ABB funds for the given category + periodicity, filtered on souscripteurs FGP."""
     codes = CATEGORY_CODES.get(category, {}).get(periodicity.lower(), [])
-    return df_full[df_full["isin"].isin(codes)].copy()
+    mask_isin = df_full["isin"].isin(codes)
+    mask_fgp  = df_full["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False)
+    return df_full[mask_isin & mask_fgp].copy()
 
 
 def compute_tableau1(df_abb: pd.DataFrame) -> pd.DataFrame:
