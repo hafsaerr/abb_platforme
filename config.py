@@ -93,6 +93,13 @@ COLUMN_ALIASES = {
         "1J", "Perf 1J", "Performance 1J", "1 jour", "1 Jour",
         "Perf. 1J", "Performance quotidienne", "PERF 1J",
         "Variation 1J", "1J (%)", "Variation J-1",
+        "Perf quotidienne", "PERF QUOTIDIENNE", "perf quotidienne",
+        "Perf. quotidienne", "PERF. QUOTIDIENNE",
+    ],
+    "perf_1s": [
+        "1S", "1 semaine", "1 Semaine", "Perf 1S", "Perf hebdomadaire",
+        "Performance hebdomadaire", "PERF HEBDOMADAIRE", "Perf. hebdomadaire",
+        "Variation 1S", "1S (%)", "Variation semaine", "PERF 1S",
     ],
     "ytd": [
         "YTD", "Perf YTD", "Performance YTD", "YTD (%)",

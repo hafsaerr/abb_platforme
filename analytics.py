@@ -25,7 +25,7 @@ def get_market_df(df_full: pd.DataFrame, category: str) -> pd.DataFrame:
     cls_norm = cls_upper.apply(norm)
     targets_norm = [norm(v.upper()) for v in exact_values.get(category, [])]
     mask_cat = cls_norm.isin(targets_norm)
-    mask_fgp = df_full["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False)
+    mask_fgp = df_full["souscripteurs"].str.strip().str.upper() == "FGP"
     return df_full[mask_cat & mask_fgp].copy()
 
 
@@ -33,7 +33,7 @@ def get_abb_df(df_full: pd.DataFrame, category: str, periodicity: str) -> pd.Dat
     """Return ABB funds for the given category + periodicity, filtered on souscripteurs FGP."""
     codes = CATEGORY_CODES.get(category, {}).get(periodicity.lower(), [])
     mask_isin = df_full["isin"].isin(codes)
-    mask_fgp  = df_full["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False)
+    mask_fgp  = df_full["souscripteurs"].str.strip().str.upper() == "FGP"
     return df_full[mask_isin & mask_fgp].copy()
 
 

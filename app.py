@@ -527,10 +527,11 @@ def render_category_page(category: str):
     with tab1:
         st.markdown('<div class="section-header">Fonds ABB</div>', unsafe_allow_html=True)
         display_t1 = t1.copy()
+        perf_label = "Perf. hebdomadaire" if periodicity.lower() == "hebdomadaire" else "Perf. quotidienne"
         display_t1.columns = [
             "Code ISIN", "OPCVM", "Société de Gestion", "Souscripteurs",
             "Périodicité VL", "Actif Net", "Classification",
-            "Perf. quotidienne", "YTD",
+            perf_label, "YTD",
         ][:len(display_t1.columns)]
         _style_t1(display_t1)
 
@@ -868,7 +869,7 @@ def render_home():
                 vals_class = df["classification"].dropna().unique().tolist()
                 st.write(vals_class if vals_class else "⚠️ Colonne vide / non détectée")
             st.markdown(f"**Total fonds dans le fichier :** {len(df)}")
-            n_fgp = df["souscripteurs"].str.strip().str.upper().str.contains("FGP", na=False).sum()
+            n_fgp = (df["souscripteurs"].str.strip().str.upper() == "FGP").sum()
             st.markdown(f"**Fonds avec souscripteurs = FGP :** {n_fgp}")
 
         st.markdown("### Résumé rapide")

@@ -1,5 +1,6 @@
 # data_processor.py - Parse and normalise Excel files from ASFIM
 
+import io
 import pandas as pd
 import numpy as np
 import re
@@ -19,7 +20,9 @@ def process_sfin_file(uploaded_file) -> tuple[pd.DataFrame, list[str]]:
     # ── Try reading with different sheet strategies ──────────────────────────
     df_raw = None
     try:
-        xl = pd.ExcelFile(uploaded_file)
+        # Wrap in BytesIO so openpyxl can seek freely (required for Streamlit UploadedFile)
+        raw_bytes = uploaded_file.read() if hasattr(uploaded_file, "read") else uploaded_file
+        xl = pd.ExcelFile(io.BytesIO(raw_bytes))
         # Prefer sheet 0 unless another sheet looks better
         for sheet in xl.sheet_names:
             try:
@@ -65,6 +68,11 @@ def process_sfin_file(uploaded_file) -> tuple[pd.DataFrame, list[str]]:
     df["perf_1j"] = df["perf_1j"].apply(_parse_percent)
     df["ytd"]     = df["ytd"].apply(_parse_percent)
     df["actif_net"] = df["actif_net"].apply(_parse_number)
+
+    # ── Pour les fichiers hebdomadaires : si perf_1j est vide, utiliser perf_1s ─
+    if "perf_1s" in df.columns:
+        df["perf_1s"] = df["perf_1s"].apply(_parse_percent)
+        df["perf_1j"] = df["perf_1j"].combine_first(df["perf_1s"])
 
     # ── Clean text columns ────────────────────────────────────────────────────
     for col in ["opcvm", "societe_gestion", "souscripteurs", "periodicite", "classification"]:
